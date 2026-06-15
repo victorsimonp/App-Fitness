@@ -4,7 +4,7 @@ import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import { createClient } from '@supabase/supabase-js';
-import { executarAgenteTreino } from './agent.js';
+import { executarAgente } from './agent.js';
 import bcrypt from 'bcrypt';
 
 dotenv.config();
@@ -120,39 +120,22 @@ server.post(
         required: ['mensagem'],
         properties: {
           mensagem: { type: 'string', minLength: 1 },
-          anamneseCompleta: { type: 'boolean' }, // Nova propriedade aceita no body
-          historico: { 
-            type: 'array',
-            items: {
-              type: 'object',
-              required: ['role', 'content'],
-              properties: {
-                role: { type: 'string', enum: ['system', 'user', 'assistant'] },
-                content: { type: 'string' }
-              }
-            }
-          }
+          modoAgente: { type: 'string', enum: ['anamnese', 'treino', 'dieta'] }, // NOVO CONTROLE!
+          historico: { type: 'array' }
         }
       }
     }
   },
   async (request, reply) => {
-    const { mensagem, historico, anamneseCompleta } = request.body as { 
-      mensagem: string; 
-      historico?: any[]; 
-      anamneseCompleta?: boolean; 
-    };
+    const { mensagem, historico, modoAgente } = request.body as any;
 
     try {
-      // Repassa a flag para o agente decidir qual prompt usar
-      const respostaAgente = await executarAgenteTreino(mensagem, historico || [], anamneseCompleta || false);
+      // Repassa o modo para o agent.ts (padrão é anamnese se vier vazio)
+      const respostaAgente = await executarAgente(mensagem, historico || [], modoAgente || 'anamnese');
       return { resposta: respostaAgente };
     } catch (error: any) {
       server.log.error(error);
-      return reply.status(500).send({ 
-        error: 'Internal Server Error', 
-        message: 'Falha de segurança ou processamento ao consultar o agente.' 
-      });
+      return reply.status(500).send({ error: 'Erro de processamento IA' });
     }
   }
 );
