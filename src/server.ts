@@ -45,32 +45,21 @@ server.get('/health', async (request, reply) => {
 
 server.post(
   '/cadastro',
-  {
-    schema: {
-      body: {
-        type: 'object',
-        required: ['name', 'email', 'password'],
-        properties: {
-          name: { type: 'string', minLength: 2 },
-          email: { type: 'string', format: 'email' },
-          password: { type: 'string', minLength: 6 }
-        }
-      }
-    }
-  },
   async (request, reply) => {
-    const { name, email, password } = request.body as { name: string; email: string; password: string };
-
     try {
+      const { name, email, password } = request.body as any;
+
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
       });
 
       if (authError || !authData.user) {
-        return reply.status(400).send({ error: 'Erro no cadastro', message: authError?.message });
+        server.log.error(`[AUTH ERROR] ${authError?.message}`);
+        return reply.status(400).send({ error: 'Erro no Auth', message: authError?.message });
       }
 
+      // 2. Vincula o perfil do usuário na tabela de usuários públicos
       const { error: profileError } = await supabase
         .from('usuarios')
         .insert({
@@ -80,13 +69,14 @@ server.post(
         });
 
       if (profileError) {
-        return reply.status(400).send({ error: 'Erro no perfil', message: profileError.message });
+        server.log.error(`[PROFILE ERROR] ${profileError.message}`);
+        return reply.status(400).send({ error: 'Erro no Perfil', message: profileError.message });
       }
 
       return reply.status(201).send({ message: 'Conta criada com sucesso!' });
-    } catch (error) {
-      server.log.error(error);
-      return reply.status(500).send({ error: 'Internal Server Error', message: 'Erro ao processar registro.' });
+    } catch (error: any) {
+      server.log.error(`[FATAL ERROR] ${error.message}`);
+      return reply.status(500).send({ error: 'Erro interno no backend' });
     }
   }
 );
