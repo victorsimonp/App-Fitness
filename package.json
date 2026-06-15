@@ -2,12 +2,12 @@
   "name": "fitness_backend",
   "version": "1.0.0",
   "description": "Backend do Sistema Kinetic com IA e Supabase",
-  "main": "dist/server.js",
+  "main": "src/server.ts",
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js"
+    "build": "echo 'Build ignorado, usando tsx direto no runtime'",
+    "start": "tsx src/server.ts"
   },
   "keywords": [],
   "author": "Victor Simon",
