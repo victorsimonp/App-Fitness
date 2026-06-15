@@ -5,6 +5,7 @@ import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import { createClient } from '@supabase/supabase-js';
 import { executarAgenteTreino } from './agent.js';
+import bcrypt from 'bcrypt';
 
 dotenv.config();
 
@@ -49,14 +50,17 @@ server.post(
     try {
       const { name, email, password } = request.body as any;
 
-      server.log.info(`Inserindo usuário direto na tabela: ${email}`);
+      server.log.info(`Iniciando cadastro seguro para: ${email}`);
+
+      const saltRounds = 10;
+      const hashDaSenha = await bcrypt.hash(password, saltRounds);
 
       const { error: dbError } = await supabase
         .from('usuarios')
         .insert({
           nome: name,
           email: email,
-          senha: password
+          senha_hash: hashDaSenha
         });
 
       if (dbError) {
@@ -64,7 +68,7 @@ server.post(
         return reply.status(400).send({ error: 'Erro ao salvar no banco', message: dbError.message });
       }
 
-      return reply.status(201).send({ message: 'Cadastro realizado com sucesso!' });
+      return reply.status(201).send({ message: 'Cadastro seguro realizado com sucesso!' });
     } catch (error: any) {
       server.log.error(`[ERRO CRÍTICO] ${error.message}`);
       return reply.status(500).send({ error: 'Erro interno no servidor' });
