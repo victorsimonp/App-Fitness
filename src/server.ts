@@ -20,7 +20,8 @@ server.register(helmet, { contentSecurityPolicy: true });
 
 server.register(cors, {
   origin: '*',
-  methods: ['GET', 'POST']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
 });
 
 server.register(rateLimit, {
