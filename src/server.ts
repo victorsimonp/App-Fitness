@@ -120,6 +120,7 @@ server.post(
         required: ['mensagem'],
         properties: {
           mensagem: { type: 'string', minLength: 1 },
+          anamneseCompleta: { type: 'boolean' }, // Nova propriedade aceita no body
           historico: { 
             type: 'array',
             items: {
@@ -136,10 +137,15 @@ server.post(
     }
   },
   async (request, reply) => {
-    const { mensagem, historico } = request.body as { mensagem: string; historico?: any[] };
+    const { mensagem, historico, anamneseCompleta } = request.body as { 
+      mensagem: string; 
+      historico?: any[]; 
+      anamneseCompleta?: boolean; 
+    };
 
     try {
-      const respostaAgente = await executarAgenteTreino(mensagem, historico || []);
+      // Repassa a flag para o agente decidir qual prompt usar
+      const respostaAgente = await executarAgenteTreino(mensagem, historico || [], anamneseCompleta || false);
       return { resposta: respostaAgente };
     } catch (error: any) {
       server.log.error(error);
