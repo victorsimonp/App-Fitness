@@ -49,34 +49,25 @@ server.post(
     try {
       const { name, email, password } = request.body as any;
 
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-      });
+      server.log.info(`Inserindo usuário direto na tabela: ${email}`);
 
-      if (authError || !authData.user) {
-        server.log.error(`[AUTH ERROR] ${authError?.message}`);
-        return reply.status(400).send({ error: 'Erro no Auth', message: authError?.message });
-      }
-
-      // 2. Vincula o perfil do usuário na tabela de usuários públicos
-      const { error: profileError } = await supabase
+      const { error: dbError } = await supabase
         .from('usuarios')
         .insert({
-          id: authData.user.id,
           nome: name,
-          email: email
+          email: email,
+          senha: password
         });
 
-      if (profileError) {
-        server.log.error(`[PROFILE ERROR] ${profileError.message}`);
-        return reply.status(400).send({ error: 'Erro no Perfil', message: profileError.message });
+      if (dbError) {
+        server.log.error(`[ERRO BANCO] ${dbError.message}`);
+        return reply.status(400).send({ error: 'Erro ao salvar no banco', message: dbError.message });
       }
 
-      return reply.status(201).send({ message: 'Conta criada com sucesso!' });
+      return reply.status(201).send({ message: 'Cadastro realizado com sucesso!' });
     } catch (error: any) {
-      server.log.error(`[FATAL ERROR] ${error.message}`);
-      return reply.status(500).send({ error: 'Erro interno no backend' });
+      server.log.error(`[ERRO CRÍTICO] ${error.message}`);
+      return reply.status(500).send({ error: 'Erro interno no servidor' });
     }
   }
 );
