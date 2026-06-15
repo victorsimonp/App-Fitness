@@ -26,16 +26,15 @@ REGRAS DE CONDUTA:
 4. Mantenha o foco em alta performance e cibersegurança dos dados.`;
 
 export async function executarAgenteTreino(
-  mensagemUsuario: string, 
+  mensagemUsuario: string,
   historicoConversa: any[] = [],
   anamneseCompleta: boolean = false
 ) {
   try {
-    // Escolhe dinamicamente qual agente vai rodar com base na flag enviada pelo Flutter
     const systemPromptSelected = anamneseCompleta ? PROMPT_PERSONAL : PROMPT_ANAMNESE;
 
     const chatCompletion = await groq.chat.completions.create({
-      model: 'llama3-70b-8192', 
+      model: 'llama-3.3-70b-versatile',
       messages: [
         {
           role: 'system',
@@ -47,7 +46,7 @@ export async function executarAgenteTreino(
           content: mensagemUsuario
         }
       ],
-      temperature: 0.3, 
+      temperature: 0.3,
       max_tokens: 1024,
     });
 
